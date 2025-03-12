@@ -1,0 +1,81 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Castling</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="castling.css">
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <svg fill="#000000" height="36" width="36" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 209.897 209.897"><path d="M163.66,162.038V74.109h15.433V0H139.97v25.469h-14.286V0h-41.47v25.469H69.927V0H30.804v74.109h15.433v87.929H26.265
+          v47.859h157.368v-47.859H163.66z M42.909,12.099h14.913v25.47h38.497v-25.47h17.259v25.47h38.497v-25.47h14.913v49.896H42.909
+          V12.099z M58.342,160.3V74.972h93.207V160.3H58.342L58.342,160.3z M171.527,197.792H38.37v-23.648h133.157V197.792z"/></svg>
+        <h1>Castling</h1>
+        <svg fill="#000000" height="36" width="36" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 209.897 209.897"><path d="M163.66,162.038V74.109h15.433V0H139.97v25.469h-14.286V0h-41.47v25.469H69.927V0H30.804v74.109h15.433v87.929H26.265
+          v47.859h157.368v-47.859H163.66z M42.909,12.099h14.913v25.47h38.497v-25.47h17.259v25.47h38.497v-25.47h14.913v49.896H42.909
+          V12.099z M58.342,160.3V74.972h93.207V160.3H58.342L58.342,160.3z M171.527,197.792H38.37v-23.648h133.157V197.792z"/></svg>
+      </header>
+      <main>
+        <h2 id="daily-puzzle-title">Daily Puzzle</h2>
+        <castling-selector>
+          <button class="difficulty-button" data-difficulty="0">
+            Regular Puzzle
+          </button>
+          <button class="difficulty-button" data-difficulty="1">
+            Advanced Puzzle
+          </button>
+          <button class="difficulty-button" data-difficulty="2">
+            Master Puzzle
+          </button>
+        </castling-selector>
+        <castling-grid style="--size: 3;">
+          <castling-cell class="even"></castling-cell>
+          <castling-cell class="odd"></castling-cell>
+          <castling-cell class="even"></castling-cell>
+          <castling-cell class="odd"></castling-cell>
+          <castling-cell class="even"></castling-cell>
+          <castling-cell class="odd"></castling-cell>
+          <castling-cell class="even"></castling-cell>
+          <castling-cell class="odd"></castling-cell>
+          <castling-cell class="even"></castling-cell>
+        </castling-grid>
+        <section class="instructions">
+          <h2>How to Play</h2>
+          <ol>
+            <li>Tap anywhere on the board to place your rook.</li>
+            <li>Tap on a square <span class="screen-wide-only">(or use the arrow keys)</span> to move to it.</li>
+            <li>You can only move by the number of squares shown on the square you're currently on.</li>
+            <li>Land on every square exactly once, then return to the position you started from, to win.</li>
+          </ol>
+          <h2>Tips</h2>
+          <ul>
+            <li>Tap your rook to undo your last move. You can undo as often as you like.</li>
+            <li>A new daily puzzle appears every day at midnight UTC.</li>
+            <li>Every puzzle has a solution (some puzzles have multiple solutions).</li>
+            <li>Every puzzle can be solved no matter which square you start from.</li>
+            <li class="screen-wide-only">
+              Keyboard shortcuts:
+              <ul>
+                <li><kbd>←</kbd>, <kbd>→</kbd>, <kbd>↑</kbd>, and <kbd>↓</kbd> to move.</li>
+                <li><kbd>Z</kbd> to undo.</li>
+                <li>If your rook isn't on the board or hasn't moved yet, <kbd>S</kbd> to start from a random square.</li>
+                <li><kbd>1</kbd>, <kbd>2</kbd>, and <kbd>3</kbd> to select the Regular, Advanced, and Master puzzles, respectively.</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+      </main>
+
+      <footer>
+        <ul>
+          <li>A <a href="https://things.danq.me/">Dan Q thing</a></li>
+          <li>By <a href="https://danq.me/">Dan Q</a></li>
+          <li>Open Source under the <a href="https://opensource.org/license/agpl-v3">AGPL-3.0 license</a></li>
+        </ul>
+      </footer>
+    </div>
+
+    <script src="castling.js"></script>
+  </body>
+</html>

@@ -1,0 +1,297 @@
+/* Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Typography */
+body {
+  font-family: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif; 
+  font-weight: normal;
+  font-size: 18px;
+}
+
+kbd {
+  font-family: monospace;
+  background: #ccc;
+  display: inline-block;
+  padding: 1px 4px;
+  border: 1px solid #777;
+  border-radius: 4px;
+  margin: 0 2px;
+}
+
+/* Responsivity */
+.screen-wide-only {
+  display: none;
+}
+
+@media (orientation: landscape) {
+  .screen-wide-only {
+    display: revert;
+  }
+}
+
+/* Constants */
+:root {
+  --cell-border-width: min(4px, 0.75vw);
+}
+
+/* Layout */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  min-height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+header, main, footer {
+  width: 100%;
+}
+
+header {
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.instructions {
+  li {
+    padding: 1px 0;
+  }
+}
+
+footer {
+  border-top: 1px solid #ccc;
+  font-size: 0.8em;
+
+  ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    gap: 12px;
+    justify-content: space-evenly;
+  }
+}
+
+/* Puzzle Selector */
+castling-selector {
+  margin: 18px 0;
+  list-style: none;
+  display: flex;
+  justify-content: space-evenly;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+
+  button {
+    cursor: pointer;
+    flex-grow: 1;
+    border-width: 0 1px 0 1px;
+    border-style: solid;
+    border-color: #ccc;
+    border-radius: 0;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 6px;
+
+    &:first-of-type {
+      border-radius: 4px 0 0 4px;
+    }
+
+    &:last-of-type {
+      border-radius: 0 4px 4px 0;
+    }
+  }
+}
+
+/* Castling Game */
+castling-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  border: var(--cell-border-width) solid #333;
+  cursor: pointer;
+  aspect-ratio: 1;
+  transition: background-color 0.05s;
+  position: relative;
+
+  &.even {
+    background-color: #ffce9e;
+  }
+
+  &.odd {
+    background-color: #d18b47;
+  }
+
+  &.start:not(.current) {
+    &::before {
+      content: '🔒';
+      position: absolute;
+      color: #333333;
+    }
+  }
+
+  &.start.valid { /* Finishing move! Make it obvious! */
+    border-color: red;
+
+    &::before {
+      content: '🏁';
+      position: absolute;
+    }
+  }
+
+  &.on-path:not(.current) {
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23004abd' fill-opacity='0.3' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+    color: #333333aa;
+  }
+
+  &.current {
+    .distance {
+      color: white;
+      z-index: 2;
+      animation: pulsate 1.2s ease-in-out infinite;
+    }
+  }
+
+  &.invalid {
+    background-color: #ff000055;
+
+    &::after {
+      content: '❌';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      align-content: center;
+      text-align: center;
+      animation: zoom-vanish 500ms ease-out forwards;
+      opacity: 0;
+    }
+  }
+
+  &.valid::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z' stroke='%230fb338aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' stroke-dasharray='4 4'/%3E%3C/svg%3E");
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    animation: rotate 12s linear infinite;
+  }
+}
+
+castling-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--size), 1fr);
+  border: var(--cell-border-width) solid #333;
+  user-select: none;
+  width: min(100%, 80vh);
+  font-size: calc(35cqmin / var(--size));
+  font-weight: bold;
+  position: relative;
+  margin: 0 auto;
+
+  /* Rook icon overlay */
+  &.has-current-cell::after {
+    --cell-size: calc(100% / var(--size));
+    content: '';
+    position: absolute;
+    top: calc(var(--current-cell-x) * var(--cell-size));
+    left: calc(var(--current-cell-y) * var(--cell-size));
+    width: var(--cell-size);
+    height: var(--cell-size);
+    pointer-events: none;
+    transition: top 0.15s, left 0.15s;
+    background-image: url("data:image/svg+xml,%3Csvg fill='%23000000' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 209.897 209.897'%3E%3Cpath d='M163.66,162.038V74.109h15.433V0H139.97v25.469h-14.286V0h-41.47v25.469H69.927V0H30.804v74.109h15.433v87.929H26.265 v47.859h157.368v-47.859H163.66z M42.909,12.099h14.913v25.47h38.497v-25.47h17.259v25.47h38.497v-25.47h14.913v49.896H42.909 V12.099z M58.342,160.3V74.972h93.207V160.3H58.342L58.342,160.3z M171.527,197.792H38.37v-23.648h133.157V197.792z'/%3E%3C/svg%3E");
+    background-size: 80%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #00f5;
+    border: var(--cell-border-width) solid transparent;
+  }
+
+  &.solved {
+    castling-cell.current .distance {
+      color: revert;
+      animation: none;
+      z-index: auto;
+    }
+
+    &.has-current-cell::after {
+      background-color: transparent;
+      background-image: url("data:image/svg+xml,%3Csvg fill='%23ff0000' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 209.897 209.897'%3E%3Cpath d='M163.66,162.038V74.109h15.433V0H139.97v25.469h-14.286V0h-41.47v25.469H69.927V0H30.804v74.109h15.433v87.929H26.265 v47.859h157.368v-47.859H163.66z M42.909,12.099h14.913v25.47h38.497v-25.47h17.259v25.47h38.497v-25.47h14.913v49.896H42.909 V12.099z M58.342,160.3V74.972h93.207V160.3H58.342L58.342,160.3z M171.527,197.792H38.37v-23.648h133.157V197.792z'/%3E%3C/svg%3E");
+      animation: party-mode 3.8s infinite linear, pulsate-without-break 2.4s infinite ease-in-out;
+    }
+  }
+}
+
+/* Animations */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes zoom-vanish {
+  0% {
+    transform: scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes pulsate {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.2);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulsate-without-break {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes party-mode {
+  0% {
+    filter: hue-rotate(0deg) brightness(100%);
+  }
+  50% {
+    filter: hue-rotate(180deg) brightness(150%);
+  }
+  100%{
+    filter: hue-rotate(360deg) brightness(100%);
+  }
+}
