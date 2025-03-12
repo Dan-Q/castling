@@ -126,13 +126,13 @@ class CastlingGrid extends HTMLElement {
         </castling-cell>
       `).join('')}
     `).join('');
-    const walls = this.puzzle.m !== 'walls' ? '' : (
-      this.puzzle.x[0].map((row,x)=>`
+    const walls = !(this.puzzle.x && this.puzzle.x.walls) ? '' : (
+      this.puzzle.x.walls[0].map((row,x)=>`
         ${row.map((cell,y)=>
           cell ? `<castling-wall data-direction="v" data-x="${x}" data-y="${y}" style="--wall-x: ${x}; --wall-y: ${y};" /></castling-wall>` : ''
         ).join('')}
       `).join('') + 
-      this.puzzle.x[1].map((column,x)=>`
+      this.puzzle.x.walls[1].map((column,x)=>`
         ${column.map((cell,y)=>
           cell ? `<castling-wall data-direction="h" data-x="${x}" data-y="${y}" style="--wall-x: ${x}; --wall-y: ${y};" ></castling-wall>` : ''
         ).join('')}
