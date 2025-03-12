@@ -9,18 +9,18 @@ let today = new Date(Date.UTC(
 ));
 
 // Storage for the puzzles:
-let puzzles = [];
+let puzzles = {};
 
 /**
- * Loads the puzzles for a given year. Returns a promise that resolves once the
- * puzzles are loaded, containing all puzzles from all loaded years.
+ * Loads the puzzles for a given year + month (e.g. '202503'). Returns a promise that resolves once the
+ * puzzles are loaded, containing all puzzles from all loaded year + months.
  */
-function loadPuzzles(year) {
-  if (puzzles[year]) {
+function loadPuzzles(yearAndMonth) {
+  if (puzzles[yearAndMonth]) {
     return Promise.resolve(puzzles);
   }
-  return fetch(`${year}.json`).then(r=>r.json()).then(data=>{
-    puzzles[year] = data;
+  return fetch(`puzzles/${yearAndMonth}.json`).then(r=>r.json()).then(data=>{
+    puzzles[yearAndMonth] = data;
     return puzzles;
   });
 }
@@ -70,6 +70,16 @@ class CastlingCell extends HTMLElement {
 customElements.define('castling-cell', CastlingCell);
 
 /**
+ * A blocking wall on the grid.
+ */
+class CastlingWall extends HTMLElement {
+  constructor() {
+    super();
+  }
+}
+customElements.define('castling-wall', CastlingWall);
+
+/**
  * The Castling Grid
  */
 class CastlingGrid extends HTMLElement {
@@ -96,26 +106,39 @@ class CastlingGrid extends HTMLElement {
   }
 
   loadPuzzle(date, difficulty) {
-    const year = date.getFullYear();
-    const dayOfYear = Math.floor((today - new Date(Date.UTC(today.getUTCFullYear(), 0, 1))) / (24 * 60 * 60 * 1000));
-    loadPuzzles(year).then(puzzles=>{
-      this.puzzle = puzzles[year][dayOfYear][difficulty];
+    const yearAndMonth = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    const yearMonthAndDay = `${yearAndMonth}${date.getDate().toString().padStart(2, '0')}`;
+    loadPuzzles(yearAndMonth).then(puzzles=>{
+      this.puzzle = puzzles[yearAndMonth][yearMonthAndDay][difficulty];
       this.setDailyTitle(date, difficulty);
       this.renderPuzzle();
     });
   }
 
   renderPuzzle() {
-    const size = this.puzzle.length;
+    const size = this.puzzle.s;
     this.style.setProperty('--size', size);
     this.reset();
-    this.innerHTML = this.puzzle.map((row,x)=>`
+    const cells = this.puzzle.d.map((row,x)=>`
       ${row.map((cell,y)=>`
         <castling-cell data-x="${x}" data-y="${y}" data-slv="${(cell[1] * size) + cell[2]}" data-distance="${cell[0]}" class="${(x+y)%2 ? 'odd' : 'even'}">
           <span class="distance">${cell[0]}</span>
         </castling-cell>
       `).join('')}
     `).join('');
+    const walls = this.puzzle.m !== 'walls' ? '' : (
+      this.puzzle.x[0].map((row,x)=>`
+        ${row.map((cell,y)=>
+          cell ? `<castling-wall data-direction="v" data-x="${x}" data-y="${y}" style="--wall-x: ${x}; --wall-y: ${y};" /></castling-wall>` : ''
+        ).join('')}
+      `).join('') + 
+      this.puzzle.x[1].map((column,x)=>`
+        ${column.map((cell,y)=>
+          cell ? `<castling-wall data-direction="h" data-x="${x}" data-y="${y}" style="--wall-x: ${x}; --wall-y: ${y};" ></castling-wall>` : ''
+        ).join('')}
+      `).join('')
+    );
+    this.innerHTML = cells + walls;
   }
 
   indicateValidMoves(){
@@ -145,9 +168,21 @@ class CastlingGrid extends HTMLElement {
     const distance = this.currentCell().distanceTo(cell);
     if( distance != allowedDistance ) return false;
     // Rule #3: if all cells are on the path and the target cell is the START cell, then this move is valid (and solves the puzzle!)
-    if( this.path.length == (this.puzzle.length ** 2) && cell.classList.contains('start') ) return true;
+    if( this.path.length == (this.puzzle.s ** 2) && cell.classList.contains('start') ) return true;
     // Rule #4: must not be on something already hit (which includes the current cell, of course):
     if( cell.classList.contains('on-path') ) return false;
+    // Rule #5: must not involve traversing a wall:
+    if( currentCell.dataset.x == cell.dataset.x ) {
+      const potentialWallValuesY = Array( Math.abs( currentCell.dataset.y - cell.dataset.y ) ).keys().map(y=>Math.min( currentCell.dataset.y, cell.dataset.y ) + y);
+      for( const y of potentialWallValuesY ) {
+        if( this.querySelector(`castling-wall[data-direction="v"][data-x="${currentCell.dataset.x}"][data-y="${y}"]`) ) return false;
+      }
+    } else if( currentCell.dataset.y == cell.dataset.y ) {
+      const potentialWallValuesX = Array( Math.abs( currentCell.dataset.x - cell.dataset.x ) ).keys().map(x=>Math.min( currentCell.dataset.x, cell.dataset.x ) + x);
+      for( const x of potentialWallValuesX ) {
+        if( this.querySelector(`castling-wall[data-direction="h"][data-x="${x}"][data-y="${currentCell.dataset.y}"]`) ) return false;
+      }
+    }
     // Okay, looks good!
     return true;
   }
@@ -217,7 +252,7 @@ class CastlingGrid extends HTMLElement {
   }
 
   isSolved(){
-    return this.path.length == ((this.puzzle.length ** 2) + 1) && this.currentCell().classList.contains('start');
+    return this.path.length == ((this.puzzle.s ** 2) + 1) && this.currentCell().classList.contains('start');
   }
 
   giveUp(){

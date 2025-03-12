@@ -189,6 +189,7 @@ castling-cell {
 }
 
 castling-grid {
+  --cell-size: calc(100% / var(--size));
   display: grid;
   grid-template-columns: repeat(var(--size), 1fr);
   border: var(--cell-border-width) solid #333;
@@ -201,7 +202,6 @@ castling-grid {
 
   /* Rook icon overlay */
   &.has-current-cell::after {
-    --cell-size: calc(100% / var(--size));
     content: '';
     position: absolute;
     top: calc(var(--current-cell-x) * var(--cell-size));
@@ -229,7 +229,33 @@ castling-grid {
       background-color: transparent;
       background-image: url("data:image/svg+xml,%3Csvg fill='%23ff0000' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 209.897 209.897'%3E%3Cpath d='M163.66,162.038V74.109h15.433V0H139.97v25.469h-14.286V0h-41.47v25.469H69.927V0H30.804v74.109h15.433v87.929H26.265 v47.859h157.368v-47.859H163.66z M42.909,12.099h14.913v25.47h38.497v-25.47h17.259v25.47h38.497v-25.47h14.913v49.896H42.909 V12.099z M58.342,160.3V74.972h93.207V160.3H58.342L58.342,160.3z M171.527,197.792H38.37v-23.648h133.157V197.792z'/%3E%3C/svg%3E");
       animation: party-mode 3.8s infinite linear, pulsate-without-break 2.4s infinite ease-in-out;
+      z-index: 3;
     }
+  }
+}
+
+/* Walls on the grid */
+castling-wall {
+  position: absolute;
+  background-color: #68230E;
+  background-image: url("data:image/svg+xml,%3Csvg width='21' height='22' viewBox='0 0 42 44' xmlns='http://www.w3.org/2000/svg'%3E%3Cg id='Page-1' fill='none' fill-rule='evenodd'%3E%3Cg id='brick-wall' fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath d='M0 0h42v44H0V0zm1 1h40v20H1V1zM0 23h20v20H0V23zm22 0h20v20H22V23z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  z-index: 1;
+  border: var(--cell-border-width) solid #333;
+  pointer-events: none;
+  box-shadow: 3px 3px 4px #333;
+
+  &[data-direction="h"] {
+    width: calc(var(--cell-size) + var(--cell-border-width) * 2);
+    height: calc(var(--cell-border-width) * 8);
+    top: calc(((var(--wall-x) + 1) * var(--cell-size)) - (var(--cell-border-width) * 4));
+    left: calc((var(--wall-y) * var(--cell-size)) - var(--cell-border-width));
+  }
+
+  &[data-direction="v"] {
+    width: calc(var(--cell-border-width) * 8);
+    height: calc(var(--cell-size) + var(--cell-border-width) * 2);
+    top: calc((var(--wall-x) * var(--cell-size)) - var(--cell-border-width));
+    left: calc(((var(--wall-y) + 1) * var(--cell-size)) - (var(--cell-border-width) * 4));
   }
 }
 
