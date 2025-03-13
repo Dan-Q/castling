@@ -132,18 +132,20 @@ castling-cell {
 
   &.start:not(.current) {
     &::before {
-      content: '🔒';
+      content: '🏁';
       position: absolute;
       color: #333333;
+      opacity: 0.5;
     }
   }
 
   &.start.valid { /* Finishing move! Make it obvious! */
-    border-color: red;
+    border-color: #9e9;
 
     &::before {
       content: '🏁';
       position: absolute;
+      opacity: 1;
     }
   }
 
