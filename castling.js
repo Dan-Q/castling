@@ -120,11 +120,20 @@ class CastlingGrid extends HTMLElement {
     this.style.setProperty('--size', size);
     this.reset();
     const cells = this.puzzle.d.map((row,x)=>`
-      ${row.map((cell,y)=>`
-        <castling-cell data-x="${x}" data-y="${y}" data-slv="${(cell[1] * size) + cell[2]}" data-distance="${cell[0]}" class="${(x+y)%2 ? 'odd' : 'even'}">
-          <span class="distance">${cell[0]}</span>
-        </castling-cell>
-      `).join('')}
+      ${row.map((cell,y)=>{
+        const slv = cell ? (cell[1] * size) + cell[2] : null;
+        let distance = cell ? cell[0] : null;
+        let classList = (x+y)%2 ? 'odd' : 'even';
+        if( this.puzzle.x && this.puzzle.x.pits && this.puzzle.x.pits.find(p=>p[0]==x && p[1] == y) ) {
+          classList += ' pit';
+          distance = '';
+        }
+        return `
+          <castling-cell data-x="${x}" data-y="${y}" data-slv="${slv}" data-distance="${distance}" class="${classList}" data-celltmp="${JSON.stringify(cell)}">
+            <span class="distance">${distance}</span>
+          </castling-cell>
+        `
+      }).join('')}
     `).join('');
     const walls = !(this.puzzle.x && this.puzzle.x.walls) ? '' : (
       this.puzzle.x.walls[0].map((row,x)=>`
@@ -180,6 +189,14 @@ class CastlingGrid extends HTMLElement {
     this.style.setProperty('--current-cell-y', currentCell.dataset.y);
   }
 
+  numberOfValidSquaresInPuzzle(){
+    let validCount = (this.puzzle.s ** 2);
+    if( this.puzzle.x && this.puzzle.x.pits ) {
+      validCount -= this.puzzle.x.pits.length;
+    }
+    return validCount;
+  }
+
   isValidMove(cell, fromCell = this.currentCell()){
     if( ! fromCell ) return true; // when there's no current cell, any move is valid
     // Rule #1: must be orthogally-aligned to the current cell:
@@ -189,7 +206,7 @@ class CastlingGrid extends HTMLElement {
     const distance = fromCell.distanceTo(cell);
     if( distance != allowedDistance ) return false;
     // Rule #3: if all cells are on the path and the target cell is the START cell, then this move is valid (and solves the puzzle!)
-    if( this.path.length == (this.puzzle.s ** 2) && cell.classList.contains('start') ) return true;
+    if( this.path.length == this.numberOfValidSquaresInPuzzle() && cell.classList.contains('start') ) return true;
     // Rule #4: must not be on something already hit (which includes the current cell, of course):
     if( cell.classList.contains('on-path') ) return false;
     // Rule #5: must not involve traversing a wall:
@@ -204,6 +221,8 @@ class CastlingGrid extends HTMLElement {
         if( this.querySelector(`castling-wall[data-direction="h"][data-x="${x}"][data-y="${fromCell.dataset.y}"]`) ) return false;
       }
     }
+    // Rule #6: no jumping into pits!
+    if( this.puzzle.x && this.puzzle.x.pits && this.puzzle.x.pits.find(p=>p[0]==cell.dataset.x && p[1] == cell.dataset.y) ) return false;
     // Okay, looks good!
     return true;
   }
@@ -273,7 +292,7 @@ class CastlingGrid extends HTMLElement {
   }
 
   isSolved(){
-    return this.path.length == ((this.puzzle.s ** 2) + 1) && this.currentCell().classList.contains('start');
+    return this.path.length == (this.numberOfValidSquaresInPuzzle() + 1) && this.currentCell().classList.contains('start');
   }
 
   giveUp(){
@@ -286,7 +305,7 @@ class CastlingGrid extends HTMLElement {
         this.allowMoves = true;
       } else if( this.path == 0 ) {
         // solver: make first move randomly by getting the entire grid as an array and shuffling it:
-        const cells = Array.from(this.querySelectorAll('castling-cell'));
+        const cells = Array.from(this.querySelectorAll('castling-cell:not(.pit)'));
         cells.sort(()=>Math.random() - 0.5);
         this.allowMoves = true;
         cells[0].click();

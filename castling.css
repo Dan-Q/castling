@@ -187,6 +187,10 @@ castling-cell {
     animation: rotate 12s linear infinite;
   }
 
+  &.pit {
+    background: radial-gradient(circle, rgba(0,0,0,1) 0%, rgb(88, 32, 8) 100%);
+  }
+
   /* &.is-inaccessible::after {
     content: 'Incassessible';
     position: absolute;
