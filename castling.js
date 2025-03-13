@@ -141,6 +141,22 @@ class CastlingGrid extends HTMLElement {
     this.innerHTML = cells + walls;
   }
 
+  // Returns true if there exist no valid moves TO this cell from cells that aren't on the path:
+  isCellInaccessible(cell) {
+    if( cell.classList.contains('on-path') ) return false; // don't check cells we've already visited
+    const currentCell = this.currentCell();
+    if( ! currentCell ) return false; // when there's no piece on the board, any move is valid
+    // If there are NO valid moves from our current cell, return false so we don't just paint the whole board red!
+    if( ! this.querySelector('castling-cell.valid') ) return false;
+    // If this cell is accessible from the CURRENT cell, return false:
+    if( this.isValidMove(cell, currentCell) ) return false;
+    // Look through all other cells that are not on the path. If this is a valid move for any of them, return false:
+    for( const otherCell of this.querySelectorAll('castling-cell:not(.on-path)') ) {
+      if( this.isValidMove(cell, otherCell) ) return false;
+    }
+    return true;
+  }
+
   indicateValidMoves(){
     // Apply special class if we've solved it already:
     this.classList.toggle('solved', this.isSolved());
@@ -150,6 +166,12 @@ class CastlingGrid extends HTMLElement {
     this.querySelectorAll('castling-cell').forEach(cell=>
       cell.classList.toggle('valid', showValidMoves && this.isValidMove(cell))
     );
+    // Also: if enabled, provide hints to show which cells are completely inaccessible (i.e. no squares can result in a move to them) or have no exits (i.e. no squares can result in a move from them)
+    if( false ) {
+      this.querySelectorAll('castling-cell').forEach(cell=>{
+        cell.classList.toggle('is-inaccessible', this.isCellInaccessible(cell));
+      });
+    }
     // Also indicate current cell as overlay:
     this.classList.toggle('has-current-cell', showValidMoves);
     const currentCell = this.currentCell();
@@ -158,29 +180,28 @@ class CastlingGrid extends HTMLElement {
     this.style.setProperty('--current-cell-y', currentCell.dataset.y);
   }
 
-  isValidMove(cell){
-    const currentCell = this.currentCell();
-    if( ! currentCell ) return true; // when there's no current cell, any move is valid
+  isValidMove(cell, fromCell = this.currentCell()){
+    if( ! fromCell ) return true; // when there's no current cell, any move is valid
     // Rule #1: must be orthogally-aligned to the current cell:
-    if( currentCell.dataset.x != cell.dataset.x && currentCell.dataset.y != cell.dataset.y ) return false;
+    if( fromCell.dataset.x != cell.dataset.x && fromCell.dataset.y != cell.dataset.y ) return false;
     // Rule #2: must be correct distance away:
-    const allowedDistance = this.currentCell().dataset.distance;
-    const distance = this.currentCell().distanceTo(cell);
+    const allowedDistance = fromCell.dataset.distance;
+    const distance = fromCell.distanceTo(cell);
     if( distance != allowedDistance ) return false;
     // Rule #3: if all cells are on the path and the target cell is the START cell, then this move is valid (and solves the puzzle!)
     if( this.path.length == (this.puzzle.s ** 2) && cell.classList.contains('start') ) return true;
     // Rule #4: must not be on something already hit (which includes the current cell, of course):
     if( cell.classList.contains('on-path') ) return false;
     // Rule #5: must not involve traversing a wall:
-    if( currentCell.dataset.x == cell.dataset.x ) {
-      const potentialWallValuesY = Array( Math.abs( currentCell.dataset.y - cell.dataset.y ) ).keys().map(y=>Math.min( currentCell.dataset.y, cell.dataset.y ) + y);
+    if( fromCell.dataset.x == cell.dataset.x ) {
+      const potentialWallValuesY = Array( Math.abs( fromCell.dataset.y - cell.dataset.y ) ).keys().map(y=>Math.min( fromCell.dataset.y, cell.dataset.y ) + y);
       for( const y of potentialWallValuesY ) {
-        if( this.querySelector(`castling-wall[data-direction="v"][data-x="${currentCell.dataset.x}"][data-y="${y}"]`) ) return false;
+        if( this.querySelector(`castling-wall[data-direction="v"][data-x="${fromCell.dataset.x}"][data-y="${y}"]`) ) return false;
       }
-    } else if( currentCell.dataset.y == cell.dataset.y ) {
-      const potentialWallValuesX = Array( Math.abs( currentCell.dataset.x - cell.dataset.x ) ).keys().map(x=>Math.min( currentCell.dataset.x, cell.dataset.x ) + x);
+    } else if( fromCell.dataset.y == cell.dataset.y ) {
+      const potentialWallValuesX = Array( Math.abs( fromCell.dataset.x - cell.dataset.x ) ).keys().map(x=>Math.min( fromCell.dataset.x, cell.dataset.x ) + x);
       for( const x of potentialWallValuesX ) {
-        if( this.querySelector(`castling-wall[data-direction="h"][data-x="${x}"][data-y="${currentCell.dataset.y}"]`) ) return false;
+        if( this.querySelector(`castling-wall[data-direction="h"][data-x="${x}"][data-y="${fromCell.dataset.y}"]`) ) return false;
       }
     }
     // Okay, looks good!

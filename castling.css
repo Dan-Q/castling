@@ -186,6 +186,17 @@ castling-cell {
     background-position: center;
     animation: rotate 12s linear infinite;
   }
+
+  /* &.is-inaccessible::after {
+    content: 'Incassessible';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    align-content: center;
+    text-align: center;
+    background-color: red;
+    color: white;
+  }   */
 }
 
 castling-grid {
