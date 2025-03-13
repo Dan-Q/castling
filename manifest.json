@@ -1,0 +1,27 @@
+{
+  "theme_color": "#d18b47",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "icons/512-maskable.png",
+      "type": "image/png"
+    },
+    {
+      "sizes": "512x512",
+      "src": "icons/512-rounded.png",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "natural",
+  "display": "standalone",
+  "dir": "auto",
+  "lang": "en-GB",
+  "name": "Castling",
+  "short_name": "Castling",
+  "start_url": "https://castli.ng/",
+  "scope": "https://castli.ng",
+  "id": "https://castli.ng/",
+  "description": "Daily puzzle. Move a rook around a mini-chessboard touching every space once before returning home."
+}
