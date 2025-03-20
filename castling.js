@@ -123,14 +123,21 @@ class CastlingGrid extends HTMLElement {
       ${row.map((cell,y)=>{
         const slv = cell ? (cell[1] * size) + cell[2] : null;
         let distance = cell ? cell[0] : null;
+        let displayDistance = distance;
         let classList = (x+y)%2 ? 'odd' : 'even';
         if( this.puzzle.x && this.puzzle.x.pits && this.puzzle.x.pits.find(p=>p[0]==x && p[1] == y) ) {
           classList += ' pit';
-          distance = '';
+          distance = displayDistance = '';
+        }
+        // Arrow overrides
+        let arrow;
+        if( this.puzzle.x && this.puzzle.x.arrows && ( arrow = this.puzzle.x.arrows.find(a=>a.coord[0]==x && a.coord[1] == y) ) ) {
+          classList += ` arrow arrow-${arrow.direction}`;
+          displayDistance = '<span class="arrow-icon">→</span>';
         }
         return `
           <castling-cell data-x="${x}" data-y="${y}" data-slv="${slv}" data-distance="${distance}" class="${classList}" data-celltmp="${JSON.stringify(cell)}">
-            <span class="distance">${distance}</span>
+            <span class="distance">${displayDistance}</span>
           </castling-cell>
         `
       }).join('')}
@@ -197,19 +204,20 @@ class CastlingGrid extends HTMLElement {
     return validCount;
   }
 
+  isValidArrowMove(cell, fromCell){
+    const arrow = this.puzzle.x.arrows.find(a=>a.coord[0]==fromCell.dataset.x && a.coord[1] == fromCell.dataset.y);
+    if( ! arrow ) return false;
+    const direction = arrow.direction;
+    if( direction == 'up' ) return (cell.dataset.y == fromCell.dataset.y) && (cell.dataset.x < fromCell.dataset.x);
+    if( direction == 'down' ) return (cell.dataset.y == fromCell.dataset.y) && (cell.dataset.x > fromCell.dataset.x);
+    if( direction == 'left' ) return (cell.dataset.x == fromCell.dataset.x) && (cell.dataset.y < fromCell.dataset.y);
+    if( direction == 'right' ) return (cell.dataset.x == fromCell.dataset.x) && (cell.dataset.y > fromCell.dataset.y);
+    return false;
+  }
+
   isValidMove(cell, fromCell = this.currentCell()){
     if( ! fromCell ) return true; // when there's no current cell, any move is valid
-    // Rule #1: must be orthogally-aligned to the current cell:
-    if( fromCell.dataset.x != cell.dataset.x && fromCell.dataset.y != cell.dataset.y ) return false;
-    // Rule #2: must be correct distance away:
-    const allowedDistance = fromCell.dataset.distance;
-    const distance = fromCell.distanceTo(cell);
-    if( distance != allowedDistance ) return false;
-    // Rule #3: if all cells are on the path and the target cell is the START cell, then this move is valid (and solves the puzzle!)
-    if( this.path.length == this.numberOfValidSquaresInPuzzle() && cell.classList.contains('start') ) return true;
-    // Rule #4: must not be on something already hit (which includes the current cell, of course):
-    if( cell.classList.contains('on-path') ) return false;
-    // Rule #5: must not involve traversing a wall:
+    // Rule #1: must not involve traversing a wall:
     if( fromCell.dataset.x == cell.dataset.x ) {
       const potentialWallValuesY = Array( Math.abs( fromCell.dataset.y - cell.dataset.y ) ).keys().map(y=>Math.min( fromCell.dataset.y, cell.dataset.y ) + y);
       for( const y of potentialWallValuesY ) {
@@ -221,8 +229,20 @@ class CastlingGrid extends HTMLElement {
         if( this.querySelector(`castling-wall[data-direction="h"][data-x="${x}"][data-y="${fromCell.dataset.y}"]`) ) return false;
       }
     }
-    // Rule #6: no jumping into pits!
+    // Rule #2: no jumping into pits!
     if( this.puzzle.x && this.puzzle.x.pits && this.puzzle.x.pits.find(p=>p[0]==cell.dataset.x && p[1] == cell.dataset.y) ) return false;
+    // Rule #3: if all cells are on the path and the target cell is the START cell, then this move is valid (and solves the puzzle!)
+    if( this.path.length == this.numberOfValidSquaresInPuzzle() && cell.classList.contains('start') ) return true;
+    // Rule #4: must not be on something already hit (which includes the current cell, of course):
+    if( cell.classList.contains('on-path') ) return false;
+    // Rule #5: must be orthogally-aligned to the current cell:
+    if( fromCell.dataset.x != cell.dataset.x && fromCell.dataset.y != cell.dataset.y ) return false;
+    // Rule #6: arrows are a special case:
+    if( fromCell.classList.contains('arrow') ) return this.isValidArrowMove(cell, fromCell);
+    // Rule #7: must be correct distance away:
+    const allowedDistance = fromCell.dataset.distance;
+    const distance = fromCell.distanceTo(cell);
+    if( distance != allowedDistance ) return false;
     // Okay, looks good!
     return true;
   }

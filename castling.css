@@ -154,6 +154,27 @@ castling-cell {
     color: #333333aa;
   }
 
+  &.arrow {
+    font-size: 130%;
+
+    .arrow-icon {
+      display: block;
+    }
+
+    &.arrow-down .arrow-icon {
+      transform: rotate(90deg);
+    }
+
+    &.arrow-left .arrow-icon {
+      transform: rotate(180deg);
+    }
+
+    &.arrow-up .arrow-icon {
+      transform: rotate(-90deg);
+    }   
+    
+  }
+
   &.current {
     .distance {
       color: white;
